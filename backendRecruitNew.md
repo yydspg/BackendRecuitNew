@@ -18,9 +18,9 @@ todo
 
 2. Boxing将基本数据类型转为包装类,UnBoxing反之,过程编译器自动完成,目的:1.包装类便于直接操作,无需Utils2.基本数据类型利于传参
 
-3. todo
+3. `String` 类被`final`修饰,不可被继承,成员方法无法被重写,字符串不可变,多线程安全,同一个字符串可被多个线程共享,用`String` 作为参数保证安全;不可变字符串保证了`hashCode`唯一同时由此特性实现字符串常量池(创建字符时,若已经存在,直接引用)
 
-4. todo
+4. `Lambda`主要用于匿名内部类的简化书写(重写条件是:只含有一个抽象方法的接口),函数式编程注重解决事件的工具而非对象,所以忽略产生对象,注重行为执行,主要是使用`Lombok 的@Builder` `stream()` .etc 简洁的实现函数式编程 
 
 5. 如果是由同一个classLoader加载的,相同;否则不同
 
@@ -42,34 +42,37 @@ todo
 
 2. 主要使用`throw` 来手动抛出异常,实际开发可以创建`exception` 包,然后创建`BaseException` 用于继承,创建`GlobalExceptionhandler` 用于处理(方法重载)异常; 对于捕获异常,可以向上抛,也可以`try catch`
 
-3.  ~~~牛客上刚好做过一道题~~~
-   
+3. ```牛客上刚好做过一道题~~~
    ```java
    //下面程序的输出是?
    public class TestDemo{
-       public static String output = "";
-       public static void foo(int i){
-           try{
-               if(i == 1){
-                   throw new Exception();
-               }
-           }catch (Exception e){
-               output += "2";
-               return ;
-           }finally{
-               output += "3";
-           }
-           output += "4";
-       }
-       public static void main(String[] args){
-           foo(0);
-           foo(1);
-           System.out.println(output);
-       }
+      public static String output = "";
+      public static void foo(int i){
+          try{
+              if(i == 1){
+                  throw new Exception();
+              }
+          }catch (Exception e){
+              output += "2";
+              return ;
+          }finally{
+              output += "3";
+          }
+          output += "4";
+      }
+      public static void main(String[] args){
+          foo(0);
+          foo(1);
+          System.out.println(output);
+      }
    }
    ```
    
    执行foo(0)时,不满足try语句if语句,不会抛出异常,执行finally语句;执行foo(1),满足try语句if语句,抛出异常,但是catch语句内有return 但是finally 语句内必须执行,所以finally语句执行后return
+   
+   ```
+   
+   ```
 
 4. 如果`finally`语句中也有exception ,或者线程挂了,后面代码也不会执行
 
@@ -120,11 +123,11 @@ todo
 
 2. ip用于标记网络中的每一台pc的逻辑地址;域名简化i的记忆;端口有物理端口(实际pc使用的接口)和虚拟端口(docker或者虚拟机.etc).三者的关系是:如果通过域名查找,会经过dns解析出ip,数据包会先发至对应设备,通过对应`port`发至进程
 
-3. Http是一种明文方式的网络传输协议且无状态,https是对http进行ssl/tls协议对数据进行加密,提高传输安全.在实际使用中:$http Port (default):80 $  $ https Port(default) : 443$    $http Url:http:$     $ https Url: https:$
+3. Http是一种明文方式的网络传输协议且无状态,https是对http进行ssl/tls协议对数据进行加密,提高传输安全.在实际使用中:`http Port (default):80`  ` https Port(default) : 443`   `http Url:http:`  ` https Url: https:`
 
 4. http Request 中主要有:请求行(method,uri),请求头(method,cookie.检验的token,etc),请求体(json形式的`DTO,VO`)
 
-5. 全双工通信在建立连接和断开连接时要通知双方,断开连接时由于数据传输可能正在进行,所以需要双方需要收到应答,C端,S端均请求一次,回答一次,就形成了四次挥手;三次握手中,C端发起连接请求,所以S端不用向C端发请求
+5. 全双工通信在建立连接和断开连接时要通知双方,断开连接时由于数据传输可能正在进行,所以需要双方均收到应答,C端,S端均请求一次,回答一次,就形成了四次挥手;三次握手中,C端发起连接请求,所以S端不用向C端发请求
 
 6. todo
 
@@ -193,13 +196,9 @@ package com.pg.backend.constant;
 public class FilePath {
     public static final String PATH1 = "/demo";
 }
-
-
 ```
 
 #### 4.2
-
-
 
 ![](C:\Users\dell\AppData\Roaming\marktext\images\2023-10-02-14-12-48-image.png)
 
@@ -242,8 +241,6 @@ create table tb_student_teacher(
     create_user int not null,
     create_time time not null
 );
-
-
 ```
 
 #### 4.3
@@ -391,7 +388,6 @@ public class BaseContext {
 
     public static void removeCurrentId(){threadLocal.remove();}
 }
- 
 ```
 
 #### 5.3
