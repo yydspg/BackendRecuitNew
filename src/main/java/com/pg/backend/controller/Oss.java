@@ -5,7 +5,8 @@ import com.pg.backend.constant.FilePath;
 import com.pg.backend.constant.FileSize;
 import com.pg.backend.constant.FileType;
 import com.pg.backend.utils.AliOssUtil;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.Resource;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,7 +18,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/oss")
 public class Oss {
-    @Autowired
+    @Resource
     private AliOssUtil aliOssUtil;
 
     @PostMapping("/upload")

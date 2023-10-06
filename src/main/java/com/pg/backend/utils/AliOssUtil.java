@@ -6,13 +6,14 @@ import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.OSSException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
+import java.lang.String;
 import java.io.ByteArrayInputStream;
 
 @Data
-@AllArgsConstructor
+@NoArgsConstructor
 @Slf4j
 @Component
 public class AliOssUtil {
