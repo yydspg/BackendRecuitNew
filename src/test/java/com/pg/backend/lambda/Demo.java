@@ -36,6 +36,8 @@ public class Demo {
         pt.compute(key,(k,v)->v ==null ? newMsg:v.concat(newMsg));
         pt.computeIfAbsent(key, v->newMsg);
         pt.computeIfPresent(key,(k,v)->newMsg);
+
+        Runnable rnn = ()-> log.info("test");
         //函数式编程,stream
         //IntStream,LongStream,DoubleStream,Stream 继承 BaseStream,特性:无储存,函数式,可消费,对于Stream的操作分为:terminal.intermediate
         te.stream().forEach(t-> log.info(t));

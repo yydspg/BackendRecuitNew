@@ -174,6 +174,52 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T> {
         }
     }
 
+    public void eliminationLoop(){
+        if (head.prev != null || tail.next != null) {
+            head.prev = null;
+            tail.next = null;
+            return;
+        }
+        Node<T> bug = detectCycle();
+        if (bug == null) {
+            return;
+        }
+        Node<T> t = bug.prev;
+        Node<T>[] q= getPreAndSuf(bug);
+        t.next = q[1];
+        q[1].prev = t;
+        bug.prev = q[0];
+    }
+    private  Node<T> detectCycle(){
+        Node<T> f = head;
+        Node<T> s = head;
+        while(f != null && f.next != null){
+            f = f.next.next;
+            s = s.next;
+            if(s == f){
+                s = head;
+                while(true){
+                    if(s == f)  return s;
+                    s = s.next;
+                    f = f.next;
+                }
+            }
+        }
+        return null;
+    }
+
+    private Node<T>[] getPreAndSuf(Node<T> bug){
+        Node<T>[] res = new Node[2];
+        Node<T> t = head,p = tail;
+        while(t.next == bug && p.prev == bug){
+            if(t.next != bug) t = t.next;
+            if(p.prev != bug) p = p.prev;
+        }
+        res[0] = t;
+        res[1] = p;
+        return res;
+    }
+
     @Override
     public Iterator<T> iterator() {
         return new Iterator<T>() {
