@@ -2,11 +2,11 @@ package com.pg.backend.algorithm.linkedList;
 
 import java.lang.reflect.Method;
 import java.util.Iterator;
-import java.util.LinkedList;
 
-public class DoublyLinkedListSentinel<T> implements Iterable<T>{
 
-    private final static String addMethodName = "removeFirst";
+public class DoublyLinkedListSentinel<T> implements Iterable<T> {
+
+    private final static String addMethodName = "add";
     private final static String removeMethodName = "remove";
 
     static class Node<T>{
@@ -41,7 +41,6 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T>{
      * @return
      */
     private Node<T> findNode(int index){
-        isIndexIllegal(index);
         if(index < (size-1) / 2){
             return findNodeFrontToBack(index);
         }else{
@@ -92,8 +91,9 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T>{
         Node<T> suffix = prefix.next.next;
         prefix.next = suffix;
         suffix.prev = prefix;
-
-        maintain(prefix,suffix,this.getClass().getDeclaredMethod(addMethodName,Integer.class));
+        Class[] cArgs = new Class[1];
+        cArgs[0] = int.class;
+        maintain(prefix,suffix,this.getClass().getDeclaredMethod(removeMethodName,cArgs[0]));
     }
 
 //    @Deprecated
@@ -117,11 +117,15 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T>{
 
         Node<T> prefix = findNode(index - 1);
         Node<T> suffix = prefix.next;
-        Node<T> tem = new Node<>(prefix, object, suffix);
+        Node<T> tem = new Node<>(prefix,object, suffix);
         prefix.next = tem;
         suffix.prev = tem;
 
-        maintain(prefix,suffix,this.getClass().getDeclaredMethod(addMethodName,null));
+        Class[] cArgs = new Class[2];
+        cArgs[0] = int.class;
+        cArgs[1] = Object.class;
+        maintain(prefix,suffix,this.getClass().getDeclaredMethod(addMethodName,cArgs));
+
     }
     public void addByIndex(int index,T object) throws NoSuchMethodException {
         isIndexIllegal(index);
@@ -138,7 +142,7 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T>{
         remove(0);
     }
     public void addLast(T object) throws NoSuchMethodException{
-        add(size - 1,object);
+        add(size,object);
     }
     public void removeLast() throws NoSuchMethodException{
         remove(size - 1);
@@ -152,13 +156,13 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T>{
         return new IllegalArgumentException(String.format("index: [%d] is illegal",index));
     }
 
+    private void quickGc(Node<T> pre,Node<T> suf){
+        pre = null;
+        suf = null;
+    }
     private void maintain(Node<T> pre,Node<T> suf,Method method){
         quickGc(pre,suf);
         maintainSize(method);
-    }
-    private void quickGc(Node<T> pre,Node<T> suf){
-        suf = null;
-        pre = null;
     }
 
     private  void maintainSize(Method method){
