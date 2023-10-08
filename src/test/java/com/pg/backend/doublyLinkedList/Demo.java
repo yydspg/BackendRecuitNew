@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Iterator;
+import java.util.Scanner;
 
 @SpringBootTest
 public class Demo {
@@ -44,4 +45,17 @@ public class Demo {
             System.out.println(next+" ");
         }
     }
+
+    public static void main(String[] args) {
+        Scanner in = new Scanner(System.in);
+        String[] s = in.nextLine().split(" ");
+        System.out.println(s.length);
+        int t1 = Integer.parseInt(s[0]);
+        int t2 = Integer.parseInt(s[1]);
+        int t3 = Integer.parseInt(s[2]);
+        System.out.println(t1);
+        System.out.println(t2);
+        System.out.println(t3);
+    }
+
 }

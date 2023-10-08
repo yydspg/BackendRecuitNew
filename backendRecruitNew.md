@@ -204,8 +204,7 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T> {
 
 双向链表有环,当环出现在一端时,`head.next`和`tail.prev` !=`null`,只需置为`null` 即可,当环出现在中间时,首先使用快慢指针找到`bug结点`,其次双端同时遍历找到主链上的`bug`相邻结点,把环上的链路打开连上主链即可(但是代码没测试过)
 
-``` java
-
+```java
 public void eliminationLoop(){
 
     if (head.prev != null || tail.next != null) {
@@ -217,7 +216,7 @@ public void eliminationLoop(){
         if (bug == null) {
             return;
         }
-        
+
         Node<T> t = bug.prev;
         Node<T>[] q= getPreAndSuf(bug);
         t.next = q[1];
@@ -241,7 +240,7 @@ public void eliminationLoop(){
         }
         return null;
     }
-    
+
     private Node<T>[] getPreAndSuf(Node<T> bug){
         Node<T>[] res = new Node[2];
         Node<T> t = head,p = tail;
@@ -257,7 +256,46 @@ public void eliminationLoop(){
 
 #### 2.4
 
-todo
+```java
+package com.pg.backend.algorithm.dp;
+
+import java.util.Scanner;
+
+public class DpTest {
+    public void ans(){
+        Scanner in = new Scanner(System.in);
+        int index = 0;
+        int N = in.nextInt();
+        int V = in.nextInt();
+        int[] f = new int[V+1];
+        int[] v = new int[100000];
+        int[] w = new int[100000];
+        int t1=0,t2=0,t3=0;
+        for (int i = 0; i < N; i++) {
+            String[] s = in.nextLine().split(" ");
+            t1 = Integer.parseInt(s[0]);
+            t2 = Integer.parseInt(s[1]);
+            t3 = Integer.parseInt(s[2]);
+            for (int j=0;j<=t3;j<<=1){
+                v[++index] = j*t1;
+                w[++index] = j*t2;
+                t3 -= j;
+            }
+            if(t3>0){
+                v[++index] = t3*t1;
+                w[++index] = t3*t1;
+            }
+        }
+        for (int i = 0; i < index; i++) {
+            for (int j = V;j > v[i];j--){
+                f[j] = Math.max(f[j-1],f[j-v[i]]+w[i]);
+            }
+        }
+        System.out.println(f[V]);
+    }
+}
+
+```
 
 #### 2.5.1
 
@@ -265,15 +303,59 @@ todo
 
 #### 2.5.2
 
-1. **面向过程** 以过程为中心,问题分解成一系列步骤,每个过程都会对数据进行操作;**面向对象** 以对象为中心,问题被分解成一系列互相交互的对象,每个对象都有的状态和行为事务的处理由对象内部完成
+1. **面向过程** 以过程为中心,问题分解成一系列步骤,每个过程都会对数据进行操作,常用应该主要是反射,链式编程,lambda,stream体现的较多;**面向对象** 以对象为中心,问题被分解成一系列互相交互的对象,每个对象都有的状态和行为事务的处理由对象内部完成
 
 2. Boxing将基本数据类型转为包装类,UnBoxing反之,过程编译器自动完成,目的:1.包装类便于直接操作,无需Utils2.基本数据类型利于传参
 
 3. `String` 类被`final`修饰,不可被继承,成员方法无法被重写,字符串不可变,多线程安全,同一个字符串可被多个线程共享,用`String` 作为参数保证安全;不可变字符串保证了`hashCode`唯一同时由此特性实现字符串常量池(创建字符时,若已经存在,直接引用)
 
-4. `Lambda`主要用于匿名内部类的简化书写(重写条件是:只含有一个抽象方法的接口),函数式编程注重解决事件的工具而非对象,所以忽略产生对象,注重行为执行,主要是使用`Lombok 的@Builder` `stream()` .etc 简洁的实现函数式编程 
+4. `Lambda`主要用于匿名内部类的简化书写(重写条件是:只含有一个抽象方法的接口),函数式编程注重解决事件的工具而非对象,所以忽略产生对象,注重行为执行,主要是使用`Lombok 的@Builder` `stream()` .etc 简洁的实现函数式编程   
 
-5. 如果是由同一个classLoader加载的,相同;否则不同
+```java
+ @Test
+    public void demo(){
+        //part 1 lambda list
+        List<String> te = new ArrayList<>();
+        te.forEach(t->log.info("t"));
+        te.removeIf(t -> t.length()> 1);
+        te.replaceAll(t -> {
+            if (t.contains("a")) return "ok";
+            return "false";
+        });
+        te.sort((t,p)->t.length()-p.length());
+        te.sort(Comparator.comparingInt(String::length));
+
+        //part 2 lambda map
+        Map<String,String > pt = new HashMap<>();
+        pt.forEach((k,v)->log.info("{}:{}",k,v));
+        pt.replaceAll((k,v)->v.toUpperCase());
+        String newMsg = "testNewMsg";
+        String key ="testKey";
+        //map中的K无对应V时,newMsg关联至K
+        pt.merge(key,newMsg,(v1,v2)->v1+v2);
+        pt.compute(key,(k,v)->v ==null ? newMsg:v.concat(newMsg));
+        pt.computeIfAbsent(key, v->newMsg);
+        pt.computeIfPresent(key,(k,v)->newMsg);
+
+        Runnable rnn = ()-> log.info("test");
+        //函数式编程,stream
+        //IntStream,LongStream,DoubleStream,Stream 继承 BaseStream,特性:无储存,函数式,可消费,对于Stream的操作分为:terminal.intermediate
+        te.stream().forEach(t-> log.info(t));
+        te.stream().filter(t->t.length() == 2).forEach(t->log.info(t));
+        te.stream().distinct().forEach(t->log.info(t));
+        te.stream().map(t->t.toUpperCase()).forEach(t->log.info(t));
+        Stream<String> stream = Stream.of("1", "2", "3");
+        List<String> list = stream.collect(Collectors.toList());
+        Set<String> set = stream.collect(Collectors.toSet());
+        List<String> list1 = set.stream().collect(Collectors.toList());
+        HashSet<String> collect = stream.collect(Collectors.toCollection(HashSet::new));
+        //字符串拼接
+        String collect1 = stream.collect(Collectors.joining());
+
+    }
+```
+
+    5.如果是由同一个classLoader加载的,相同;否则不同
 
 #### 2.5.3
 
@@ -285,7 +367,11 @@ todo
 
 1.   **进程** 是操作系统分配资源的基本单位,启动进程需要向OS 请求资源,一个进程至少有一个主线程,用于执行代码:**线程** 是进程的一个执行单元,线程从属于进程,用于执行程序,CPU调度的基本单位;**协程** 主要用于用户态,完全由用户控制无内核切换开销,勇于提升程序并发性能
 
-2. 并发是指同一时间内,多任务同时执行,实际任意时刻,单任务执行;保证线程安全有**1.**
+2. 并发是指同一时间内,多任务同时执行,实际任意时刻,单任务执行;保证线程安全有**1.** 
+
+3. **内核线程(KLT)** :直接由OS kernel 支持的线程,由内核(多线程内核)实现线程切换,程序中一般使用轻量级线程(由内核线程支持),缺点是用户态和内核态之间切换不易,消耗内核资源                                                                                          **用户线程**: 完全建立在用户空间的线程库,系统内核无法感知,缺点是线程操作自行处理,难以解决阻塞等问题,             **用户线程和轻量级线程(LWP)混合使用**:LWP作为用户线程和KLT的桥梁,可使用Kernel中的线程调度...,保留了建立在用户空间的用户线程,支持大规模的线程并发
+
+4. 
 
 #### 2.5.5
 
@@ -293,39 +379,36 @@ todo
 
 2. 主要使用`throw` 来手动抛出异常,实际开发可以创建`exception` 包,然后创建`BaseException` 用于继承,创建`GlobalExceptionhandler` 用于处理(方法重载)异常; 对于捕获异常,可以向上抛,也可以`try catch`
 
-3. ```牛客上刚好做过一道题~~~
-   ```java
+3. ~~~牛客上刚好做过一道题~~~
+
+4. ```java
    //下面程序的输出是?
    public class TestDemo{
-      public static String output = "";
-      public static void foo(int i){
-          try{
-              if(i == 1){
-                  throw new Exception();
-              }
-          }catch (Exception e){
-              output += "2";
-              return ;
-          }finally{
-              output += "3";
-          }
-          output += "4";
-      }
-      public static void main(String[] args){
-          foo(0);
-          foo(1);
-          System.out.println(output);
-      }
+    public static String output = "";
+    public static void foo(int i){
+    try{
+    if(i == 1){
+    throw new Exception();
+    }
+    }catch (Exception e){
+    output += "2";
+    return ;
+    }finally{
+    output += "3";
+    }
+    output += "4";
+    }
+    public static void main(String[] args){
+    foo(0);
+    foo(1);
+    System.out.println(output);
+    }
    }
    ```
    
    执行foo(0)时,不满足try语句if语句,不会抛出异常,执行finally语句;执行foo(1),满足try语句if语句,抛出异常,但是catch语句内有return 但是finally 语句内必须执行,所以finally语句执行后return
    
-   ```
-   
-   ```
-
-4. 如果`finally`语句中也有exception ,或者线程挂了,后面代码也不会执行
+   如果`finally`语句中也有`exception `,或者线程挂了,后面代码也不会执行
 
 #### 2.6
 
@@ -524,11 +607,11 @@ todo
 
 #### 5.1
 
-使用mybatis时,主要流程是实现service,mapper ,但是单表查询编写复杂,使用mybatis-plus可避免
+使用mybatis时,主要流程是实现service,mapper ,~~~~但是单表查询编写复杂,使用mybatis-plus可避免~~ 
 
 #### 5.2
 
-使用JWT校验的流程:编写ThreadLocal工具类;编写JWTUtil 用于处理token的create() && parse() ;编写JwtInterceptor 实现 HandleInterceptor 并重写PreHandle方法;编写配置类注册拦截器
+使用JWT校验的流程:编写`ThreadLocal`工具类;编写JWTUtil 用于处理`token`的`create() && parse()` ;编写`JwtInterceptor` 实现 `HandleInterceptor` 并重写`PreHandle`方法;编写配置类注册拦截器
 
 ```java
 //1.jwtProperties
