@@ -256,6 +256,8 @@ public void eliminationLoop(){
 
 #### 2.4
 
+多重背包,采用二进制优化
+
 ```java
 package com.pg.backend.algorithm.dp;
 
@@ -294,7 +296,6 @@ public class DpTest {
         System.out.println(f[V]);
     }
 }
-
 ```
 
 #### 2.5.1
@@ -303,9 +304,9 @@ public class DpTest {
 
 #### 2.5.2
 
-1. **面向过程** 以过程为中心,问题分解成一系列步骤,每个过程都会对数据进行操作,常用应该主要是反射,链式编程,lambda,stream体现的较多;**面向对象** 以对象为中心,问题被分解成一系列互相交互的对象,每个对象都有的状态和行为事务的处理由对象内部完成
+1. **面向过程** 以过程为中心,问题分解成一系列步骤,每个过程都会对数据进行操作,常用应该主要是反射,链式编程,`lambda,stream`体现的较多;**面向对象** 以对象为中心,问题被分解成一系列互相交互的对象,每个对象都有的状态和行为事务的处理由对象内部完成
 
-2. Boxing将基本数据类型转为包装类,UnBoxing反之,过程编译器自动完成,目的:1.包装类便于直接操作,无需Utils2.基本数据类型利于传参
+2. Boxing将基本数据类型转为包装类,UnBoxing反之,过程编译器自动完成,目的:1.包装类便于直接操作,无需`Utils` 2.基本数据类型利于传参
 
 3. `String` 类被`final`修饰,不可被继承,成员方法无法被重写,字符串不可变,多线程安全,同一个字符串可被多个线程共享,用`String` 作为参数保证安全;不可变字符串保证了`hashCode`唯一同时由此特性实现字符串常量池(创建字符时,若已经存在,直接引用)
 
@@ -379,31 +380,29 @@ public class DpTest {
 
 2. 主要使用`throw` 来手动抛出异常,实际开发可以创建`exception` 包,然后创建`BaseException` 用于继承,创建`GlobalExceptionhandler` 用于处理(方法重载)异常; 对于捕获异常,可以向上抛,也可以`try catch`
 
-3. ~~~牛客上刚好做过一道题~~~
-
-4. ```java
+3. ```java
+   //牛客上刚好做过一道题
    //下面程序的输出是?
    public class TestDemo{
     public static String output = "";
     public static void foo(int i){
-    try{
-    if(i == 1){
-    throw new Exception();
-    }
-    }catch (Exception e){
-    output += "2";
-    return ;
-    }finally{
-    output += "3";
-    }
-    output += "4";
-    }
+        try{
+          if(i == 1){
+           throw new Exception();
+          }
+         }catch (Exception e){
+           output += "2";
+            return ;
+         }finally{
+           output += "3";
+          }
+        output += "4";
+       }
     public static void main(String[] args){
-    foo(0);
-    foo(1);
+            foo(0);
+            foo(1);
     System.out.println(output);
     }
-   }
    ```
    
    执行foo(0)时,不满足try语句if语句,不会抛出异常,执行finally语句;执行foo(1),满足try语句if语句,抛出异常,但是catch语句内有return 但是finally 语句内必须执行,所以finally语句执行后return
@@ -435,7 +434,10 @@ public class HttpRequest {
     @GetMapping
     public Result<String> combine(@PathVariable String name,String type){
         StringBuilder re = new StringBuilder();
-        String s = re.append(name).append("+").append(type).toString();
+        String s = re.append(name)
+                     .append("+")
+                     .append(type)
+                     .toString();
         return Result.success(s);
     }
     @PostMapping
@@ -447,9 +449,62 @@ public class HttpRequest {
  }
 ```
 
+###### ext
+
+1,2,3均已实现
+
 #### 3.3
 
-todo
+实现`aspect`切面类,填充`updateTime,createUser`.etc字段
+
+```java
+//controller 
+package com.pg.backend.controller;
+
+import com.pg.backend.common.Result;
+import com.pg.backend.entity.Post;
+import com.pg.backend.entity.PostDto;
+import com.pg.backend.service.DemoService;
+import jakarta.annotation.Resource;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+
+@Controller
+@RequestMapping("/post")
+public class DemoController {
+    @Resource
+    private DemoService demoService;
+    @PostMapping
+    public Result<String> add(@RequestBody PostDto postDto){
+        Post post = new Post();
+        BeanUtils.copyProperties(postDto,post);
+        demoService.save(post);
+        return Result.success();
+    }
+    @PutMapping
+    public Result update(@RequestBody PostDto postDto){
+        Post post = new Post();
+        BeanUtils.copyProperties(postDto,post);
+        demoService.update(post);
+        return Result.success();
+    }
+    @DeleteMapping
+    public Result<String> delete(@PathVariable int id){
+        demoService.delete(id);
+        return Result.success();
+    }
+    @GetMapping
+    public Result<PostDto> query(@PathVariable int id){
+        Post post = demoService.query(id);
+        PostDto postDto = new PostDto();
+        BeanUtils.copyProperties(post,postDto);
+        return Result.success(postDto);
+    }
+}
+}
+
+```
 
 #### 3.4
 
@@ -583,6 +638,26 @@ create table tb_student_teacher(
 
 加联合索引,查询时遵循最左原则和索引覆盖,避免回表,增加性能
 
+```sql
+use backendTest;
+alter table tb_student_teacher add index s(id_class,id_student,id_teacher);
+insert into tb_student_teacher(id_student, id_teacher, id_class, update_time, update_user, create_user, create_time) VALUE (1,2,3,LOCALTIME,1,1,LOCALTIME);
+explain select id_class, id_student,id_teacher from tb_student_teacher use index (s) where id_class = ?;
+#实际整合数据应该置于业务层,写两条联查sql
+select s.name,t.name from tb_student s,tb_teacher t where (s.id,t.id) = (select id_student,id_teacher from tb_student_teacher where id_class = ?);
+#多表共性数据置于业务层,同时删除
+delete from tb_student_teacher where id_class = ?;
+update tb_student set basic_info = ?;
+#如果对单表的多字段多次修改,可能的操作是保证原子性的时候,先删后加
+```
+
+###### ext
+
+```sql
+select (select name from tb_teacher where id = t.id_teacher) "name",(select count(*) from tb_student_teacher e where e.id_teacher = t.id_teacher) 'number' from tb_student_teacher t order by 'number' desc 
+#功能实现了,但是此sql效率应该很低
+```
+
 #### 4.4
 
 - Automicity原子性,指一个事务不可分割,如果执行报错,需rollback,DB也需恢复
@@ -608,6 +683,66 @@ todo
 #### 5.1
 
 使用mybatis时,主要流程是实现service,mapper ,~~~~但是单表查询编写复杂,使用mybatis-plus可避免~~ 
+
+```java
+
+//service
+package com.pg.backend.service.impl;
+
+import com.pg.backend.entity.Post;
+import com.pg.backend.mapper.DemoMapper;
+import com.pg.backend.service.DemoService;
+import jakarta.annotation.Resource;
+import org.springframework.stereotype.Service;
+
+@Service
+public class DemoServiceImpl implements DemoService {
+    @Resource
+    private DemoMapper demoMapper;
+
+    @Override
+    public Post query(int id) {
+        return demoMapper.query(id);
+    }
+
+    @Override
+    public void delete(int id) {
+        demoMapper.delete(id);
+    }
+
+    @Override
+    public void save(Post post) {
+        demoMapper.save(post);
+    }
+
+    @Override
+    public void update(Post post) {
+        demoMapper.update(post);
+    }
+}
+//mapper
+package com.pg.backend.mapper;
+
+import com.pg.backend.annotation.AutoFill;
+import com.pg.backend.constant.OperationType;
+import com.pg.backend.entity.Post;
+import org.apache.ibatis.annotations.*;
+
+@Mapper
+public interface DemoMapper {
+    @AutoFill(OperationType.UPDATE)
+    @Select("select *  from db where id = #{id}")
+    public Post query(int id);
+    @Delete("delete from db where id = #{id}")
+    void delete(int id);
+    @AutoFill(OperationType.INSERT)
+    @Insert("insert into db(info,create_time, update_time, create_user, update_user) value"+
+   " (#{info},#{createTime}, #{updateTime}, #{createUser}, #{updateUser}) ")
+    void save(Post post);
+    @AutoFill(OperationType.UPDATE)
+    @Update("update db set info = #{info} where id  = #{id}")
+    void update(Post post);
+```
 
 #### 5.2
 
