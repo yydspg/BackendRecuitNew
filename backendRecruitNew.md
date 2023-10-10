@@ -300,7 +300,7 @@ public class DpTest {
 
 #### 2.5.1
 
-快排$Olog(n)$ 
+快排$Olog(n)$ ,冒泡排序$O(n^2)$ ,插入排序$O(n^2)$ ,选择排序$O(n^2)$,堆排序$O(nlogn)$ ,计数排序$O(n+k)$ ,k是整数的范围,桶排序$O(n+k)$ ,k是桶的数量,希尔排序$O(nlogn)$
 
 #### 2.5.2
 
@@ -339,7 +339,7 @@ public class DpTest {
         pt.computeIfPresent(key,(k,v)->newMsg);
 
         Runnable rnn = ()-> log.info("test");
-        //函数式编程,stream
+        //函数式编程,stream,@Builder.etc
         //IntStream,LongStream,DoubleStream,Stream 继承 BaseStream,特性:无储存,函数式,可消费,对于Stream的操作分为:terminal.intermediate
         te.stream().forEach(t-> log.info(t));
         te.stream().filter(t->t.length() == 2).forEach(t->log.info(t));
@@ -369,12 +369,72 @@ public class DpTest {
 1.   **进程** 是操作系统分配资源的基本单位,启动进程需要向OS 请求资源,一个进程至少有一个主线程,用于执行代码:**线程** 是进程的一个执行单元,线程从属于进程,用于执行程序,CPU调度的基本单位;**协程** 主要用于用户态,完全由用户控制无内核切换开销,勇于提升程序并发性能
 
 2. 并发是指同一时间内,多任务同时执行,实际任意时刻,单任务执行;保证线程安全有**1.** 
+   
+   1. **内核线程(KLT)** :直接由OS kernel 支持的线程,由内核(多线程内核)实现线程切换,程序中一般使用轻量级线程(由内核线程支持),缺点是用户态和内核态之间切换不易,消耗内核资源                                                                                                                                      **用户线程**: 完全建立在用户空间的线程库,系统内核无法感知,缺点是线程操作自行处理,难以解决阻塞等问题,                                                                                                               **用户线程和轻量级线程(LWP)混合使用**:LWP作为用户线程和KLT的桥梁,可使用Kernel中的线程调度...,保留了建立在用户空间的用户线程,支持大规模的线程并发
 
-3. **内核线程(KLT)** :直接由OS kernel 支持的线程,由内核(多线程内核)实现线程切换,程序中一般使用轻量级线程(由内核线程支持),缺点是用户态和内核态之间切换不易,消耗内核资源                                                                                          **用户线程**: 完全建立在用户空间的线程库,系统内核无法感知,缺点是线程操作自行处理,难以解决阻塞等问题,             **用户线程和轻量级线程(LWP)混合使用**:LWP作为用户线程和KLT的桥梁,可使用Kernel中的线程调度...,保留了建立在用户空间的用户线程,支持大规模的线程并发
+3. jdk21之前,创建的线程对象称为platform thread(linux) ,pthread在底层OS thread 上运行java 代码,在代码运行时占据OS thread 
 
-4. 
+        创建流程:
+
+            1.封装类Thread对象调用start()方法 (start() native 修饰,c++编写)
+
+            2.create OsThread (跨平台,抽象层)
+
+            3.create pThread(linux) || create ~~windows Thread ~~~           
+
+        jdk21之后,出现虚拟线程,类协程,类似于用户线程,上下文切换JVM自行处理,JVM内部管理和调度,多个虚拟线程可以在同一个 OS 线程上运行其 Java 代码，可以有效地共享该线程。
+
+    4.synchronized 作用于主要用于线程同步
+
+    使用方法:
+
+        1.非static 方法
+
+```java
+ class Test{
+    public synchronized void test(){
+
+    }
+}
+//等价于
+class Test{
+    public  void test(){
+    synchronized(Test.class){
+//new thread() 传入Test对象时,产生不同的对象锁
+         }
+    }
+}
+```
+
+        2.static 方法
+
+```java
+ class Test{
+    public static  synchronized void test(){
+
+    }
+}
+//等价于
+class Test{
+    public static void test(){
+    synchronized(Test.class){
+//虽然传入不同对象,但是类对象一致
+         }
+    }
+}
+```
+
+        3.部分代码块加锁
+
+    实现原理: 
+
+        代码块加锁是在字节码加指令monitorenter monitorexit ,线程同步方法加锁,会在class文件方法 Access Falgs 打标记 ACC_SYNCHRONIZED
+
+    
 
 #### 2.5.5
+
+
 
 1. debug时找错误;自定义异常处理,防止程序中断(ex:sql错误,文件错误...);使业务更加完整
 
@@ -413,7 +473,74 @@ public class DpTest {
 
 1. 设计模式是前辈们总结理解后解决特定问题的一系列处理流程和解决思想,用于提升代码的复用性,可维护性.etc.主要分为3类: **创建者模式** 对类的实例化过程进行抽象(单例,工厂,建造者.etc)**结构型模式** 关注对象的组成以及对象之间的依赖关系(代理,装饰者,适配器.etc) **行为型模式** 关注对象的行为问题,对不同的对象划分责任和算法的抽象(迭代器,策略,模板方法.etc)
 
-2. todo
+2. 单例模式，向外提供唯一可被访问的实例化的对象，无此对象时，使用类创建一个。多线程并发访问时，加上Synchronized上锁,让没有持有该对象的类处于等待状态。
+   
+   实现:
+   
+   ```java
+   
+   //类加载时实例化
+   public class St {
+       
+       private static St te = new St();
+       
+       private St() {
+       }
+       
+       public static St getTe() {
+           return te;
+       }
+       
+   }
+   //加单锁
+   public class St1 {
+       private static St1 te;
+       
+       private static St1() {
+       }
+      //每次需要获取锁
+       private static synchronized St1 getTe() {
+           if (te == null) {
+               te = new St1();
+           }
+           return te;
+       }   
+   }
+   //进锁前检查
+   public class St2 {
+       private  static St2 te;
+       
+       private St2() {
+       }
+       
+       public static St2 getTe() {    
+           //先查后锁
+           if (te == null) {
+               synchronized (St2.class) {
+                   if (te == null) {
+                       te = new St2();
+                   }
+               }
+           }
+           return te;
+       }  
+   }
+   //静态内部类
+   public class St3 {
+       
+       private St3() {
+       }
+       
+       private static class Sti {
+           private static final St3 te = new St3();
+       }
+       
+       public static St3 getTe() {
+           return Sti.te;
+       }
+        
+   }
+   ```
 
 3. 生产者消费者用于并发设计,处理生产者和消费者之间的协作问题,对数据传输解耦,producer && consumer 只关注自身数据,不需注意数据发送接受,对于中间过程由类似的中间件rabbitMQ自行维护, spring AMQP 可以简化开发
 
@@ -455,7 +582,7 @@ public class HttpRequest {
 
 #### 3.3
 
-实现`aspect`切面类,填充`updateTime,createUser`.etc字段
+crud时的公共数据,实现`aspect`切面类,填充`updateTime,createUser`.etc字段
 
 ```java
 //controller 
@@ -503,7 +630,6 @@ public class DemoController {
     }
 }
 }
-
 ```
 
 #### 3.4
@@ -518,7 +644,9 @@ public class DemoController {
 
 5. 全双工通信在建立连接和断开连接时要通知双方,断开连接时由于数据传输可能正在进行,所以需要双方均收到应答,C端,S端均请求一次,回答一次,就形成了四次挥手;三次握手中,C端发起连接请求,所以S端不用向C端发请求
 
-6. todo
+6. WebSocket 协议是单个 TCP 连接上进行全双工通信的协议,主要解决双向通信机制.
+   
+   WebSocket API 中，C端和S端只需完成一次握手，两者创建持久性的连接，并进行双向数据传输,允许S端主动向C端推送数据,使用 TCP 作为传输层协议，支持在 TCP 上层引入 TLS 层，进行数据加密.
 
 #### 3.5
 
@@ -643,7 +771,7 @@ use backendTest;
 alter table tb_student_teacher add index s(id_class,id_student,id_teacher);
 insert into tb_student_teacher(id_student, id_teacher, id_class, update_time, update_user, create_user, create_time) VALUE (1,2,3,LOCALTIME,1,1,LOCALTIME);
 explain select id_class, id_student,id_teacher from tb_student_teacher use index (s) where id_class = ?;
-#实际整合数据应该置于业务层,写两条联查sql
+#实际整合数据可能置于业务层,写两条联查sql
 select s.name,t.name from tb_student s,tb_teacher t where (s.id,t.id) = (select id_student,id_teacher from tb_student_teacher where id_class = ?);
 #多表共性数据置于业务层,同时删除
 delete from tb_student_teacher where id_class = ?;
@@ -654,7 +782,7 @@ update tb_student set basic_info = ?;
 ###### ext
 
 ```sql
-select (select name from tb_teacher where id = t.id_teacher) "name",(select count(*) from tb_student_teacher e where e.id_teacher = t.id_teacher) 'number' from tb_student_teacher t order by 'number' desc 
+select (select name from tb_teacher where id = t.id_teacher) 'name',(select count(*) from tb_student_teacher e where e.id_teacher = t.id_teacher) 'number' from tb_student_teacher t order by 'number' desc 
 #功能实现了,但是此sql效率应该很低
 ```
 
@@ -685,7 +813,6 @@ todo
 使用mybatis时,主要流程是实现service,mapper ,~~~~但是单表查询编写复杂,使用mybatis-plus可避免~~ 
 
 ```java
-
 //service
 package com.pg.backend.service.impl;
 
