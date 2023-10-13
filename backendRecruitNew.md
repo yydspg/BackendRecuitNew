@@ -9,6 +9,7 @@ package com.pg.backend.algorithm.linkedList;
 
 import java.lang.reflect.Method;
 import java.util.Iterator;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class DoublyLinkedListSentinel<T> implements Iterable<T> {
@@ -16,6 +17,7 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T> {
     private final static String addMethodName = "add";
     private final static String removeMethodName = "remove";
 
+    private static ReentrantLock lock = new ReentrantLock();
     static class Node<T>{
         Node prev;
         T data;
@@ -90,7 +92,7 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T> {
      * if u want to call this function,please check the index`s rationality by yourself
      * @param index
      */
-    public void remove(int index) throws NoSuchMethodException {
+    public synchronized void remove(int index) throws NoSuchMethodException {
 //        this way has pool efficiency
 //        Node<T> prefix = findNode(index - 1);
 //        Node<T> suffix = findNode(index + 1);
@@ -102,7 +104,31 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T> {
         cArgs[0] = int.class;
         maintain(prefix,suffix,this.getClass().getDeclaredMethod(removeMethodName,cArgs[0]));
     }
+    /**
+     * 显式锁
+     * @param index
+     * @param object
+     * @throws NoSuchMethodException
+     */
+//    public  void remove(int index) throws NoSuchMethodException {
+//        lock.lock();  // acquire the lock
+//        try {
+//            // existing code...
+//            Node<T> prefix = findNode(index - 1);
+//            Node<T> suffix = prefix.next.next;
+//            prefix.next = suffix;
+//            suffix.prev = prefix;
+//            Class[] cArgs = new Class[1];
+//            cArgs[0] = int.class;
+//            maintain(prefix,suffix,this.getClass().getDeclaredMethod(removeMethodName,cArgs[0]));
+//        } finally {
+//            lock.unlock();  // release the lock
+//        }
+//    }
 
+    /**
+     * 未优化的代码
+     */
 //    @Deprecated
 //    public void add(int index,Node<T> tem){
 //
@@ -120,7 +146,7 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T> {
      * @param index
      * @param object
      */
-    private void add(int index,T object) throws NoSuchMethodException {
+    private synchronized void add(int index,T object) throws NoSuchMethodException {
 
         Node<T> prefix = findNode(index - 1);
         Node<T> suffix = prefix.next;
@@ -134,6 +160,28 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T> {
         maintain(prefix,suffix,this.getClass().getDeclaredMethod(addMethodName,cArgs));
 
     }
+    /**
+     * 显示锁
+     */
+//    private  void add(int index,T object) throws NoSuchMethodException {
+//            lock.lock();
+//        try {
+//            Node<T> prefix = findNode(index - 1);
+//            Node<T> suffix = prefix.next;
+//            Node<T> tem = new Node<>(prefix,object, suffix);
+//            prefix.next = tem;
+//            suffix.prev = tem;
+//
+//            Class[] cArgs = new Class[2];
+//            cArgs[0] = int.class;
+//            cArgs[1] = Object.class;
+//            maintain(prefix,suffix,this.getClass().getDeclaredMethod(addMethodName,cArgs));
+//        } finally {
+//            lock.unlock();
+//        }
+//    }
+
+
     public void addByIndex(int index,T object) throws NoSuchMethodException {
         isIndexIllegal(index);
         add(index,object);
@@ -179,7 +227,54 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T> {
         if (method.getName().equals(removeMethodName)) {
             size --;
         }
-    }    
+    }
+
+    public void eliminationLoop(){
+        if (head.prev != null || tail.next != null) {
+            head.prev = null;
+            tail.next = null;
+            return;
+        }
+        Node<T> bug = detectCycle();
+        if (bug == null) {
+            return;
+        }
+        Node<T> t = bug.prev;
+        Node<T>[] q= getPreAndSuf(bug);
+        t.next = q[1];
+        q[1].prev = t;
+        bug.prev = q[0];
+    }
+    private  Node<T> detectCycle(){
+        Node<T> f = head;
+        Node<T> s = head;
+        while(f != null && f.next != null){
+            f = f.next.next;
+            s = s.next;
+            if(s == f){
+                s = head;
+                while(true){
+                    if(s == f)  return s;
+                    s = s.next;
+                    f = f.next;
+                }
+            }
+        }
+        return null;
+    }
+
+    private Node<T>[] getPreAndSuf(Node<T> bug){
+        Node<T>[] res = new Node[2];
+        Node<T> t = head,p = tail;
+        while(t.next == bug && p.prev == bug){
+            if(t.next != bug) t = t.next;
+            if(p.prev != bug) p = p.prev;
+        }
+        res[0] = t;
+        res[1] = p;
+        return res;
+    }
+
     @Override
     public Iterator<T> iterator() {
         return new Iterator<T>() {
@@ -198,11 +293,29 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T> {
         };
     }
 }
+public boolean hasNext() {
+                return tem != tail;
+            }
+
+            @Override
+            public T next() {
+                T oTem = tem.data;
+                tem = tem.next;
+                return oTem;
+            }
+        };
+    }
+}
+
 ```
+
+#### 2.3.1.2
+
+在`add() remove()`方法中加隐式锁,保证写操作线程安全,或者使用显式锁(代码已实现)
 
 #### 2.3.1.3
 
-双向链表有环,当环出现在一端时,`head.next`和`tail.prev` !=`null`,只需置为`null` 即可,当环出现在中间时,首先使用快慢指针找到`bug结点`,其次双端同时遍历找到主链上的`bug`相邻结点,把环上的链路打开连上主链即可(但是代码没测试过)
+双向链表有环,当环出现在一端时,`head.next`和`tail.prev` !=`null`,只需置为`null` 即可,当环出现在中间时,首先使用快慢指针找到`bug结点`,其次双端同时遍历找到主链上的`bug`相邻结点(如果会进入环,必定可以前后遍历),把环上的链路打开连上主链即可
 
 ```java
 public void eliminationLoop(){
@@ -256,7 +369,7 @@ public void eliminationLoop(){
 
 #### 2.4
 
-多重背包,采用二进制优化
+多重背包问题,采用二进制优化
 
 ```java
 package com.pg.backend.algorithm.dp;
@@ -306,11 +419,11 @@ public class DpTest {
 
 1. **面向过程** 以过程为中心,问题分解成一系列步骤,每个过程都会对数据进行操作,常用应该主要是反射,链式编程,`lambda,stream`体现的较多;**面向对象** 以对象为中心,问题被分解成一系列互相交互的对象,每个对象都有的状态和行为事务的处理由对象内部完成
 
-2. Boxing将基本数据类型转为包装类,UnBoxing反之,过程编译器自动完成,目的:1.包装类便于直接操作,无需`Utils` 2.基本数据类型利于传参
+2. Boxing将基本数据类型转为包装类,UnBoxing反之,过程编译器自动完成,目的:1.包装类便于对数据操作,无需创建`Utils` 2.基本数据类型利于传参
 
-3. `String` 类被`final`修饰,不可被继承,成员方法无法被重写,字符串不可变,多线程安全,同一个字符串可被多个线程共享,用`String` 作为参数保证安全;不可变字符串保证了`hashCode`唯一同时由此特性实现字符串常量池(创建字符时,若已经存在,直接引用)
+3. `String` 类被`final`修饰,不可被继承,成员方法无法被重写,字符串不可变,保证了多线程安全,所以同一个字符串可被多个线程共享,使用`String` 作为参数保证安全;不可变字符串保证了`hashCode`唯一同时由此特性实现字符串常量池(创建字符时,若已经存在,直接引用,在常量池中新增引用)
 
-4. `Lambda`主要用于匿名内部类的简化书写(重写条件是:只含有一个抽象方法的接口),函数式编程注重解决事件的工具而非对象,所以忽略产生对象,注重行为执行,主要是使用`Lombok 的@Builder`和 `stream()` .etc 简洁的实现函数式编程   
+4. `Lambda`主要用于匿名内部类的简化书写(重写条件是:只含有一个抽象方法的接口,即函数式),函数式编程注重解决事件的工具而非对象,所以选择忽略产生对象,注重行为执行,主要是使用`Lombok的@Builder`和 `stream()` .etc 简洁的实现函数式编程 ,如下代码表现了常见的`lambda`和`stream`的使用  .
 
 ```java
  @Test
@@ -356,7 +469,7 @@ public class DpTest {
     }
 ```
 
-    5.如果是由同一个`classLoader`加载的,相同;否则不同
+    5.如果是由同一个`classLoader`加载的,后者加载时由于双亲委派机制,所以不会加载,实际加载的类只有前者,此时堆内的`class`只有一个,对于java代码中的两个`class`对象`equals()`成立,如果采用不同的`classLoader`或者自定义`classLoader`同时加载全限定名相同的类(比如`tomcat`,同时运行多个`web` 应用时),每个`class`都有`classLoader`属性,所以判断为`false`
 
 #### 2.5.3
 
@@ -390,7 +503,9 @@ public class DpTest {
    
    `synchronized`或者接口`Lock`对方法或者代码块加锁
 
-3. **内核线程(KLT)** :直接由`OS kernel` 支持的线程,由内核(多线程内核)实现线程切换,程序中一般使用轻量级线程(由内核线程支持),缺点是用户态和内核态之间切换不易,消耗内核资源  **用户线程**: 完全建立在用户空间的线程库,系统内核无法感知,缺点是线程操作自行处理,难以解决阻塞等问题,                                                                                                   
+3. **内核线程(KLT)** :直接由`OS kernel` 支持的线程,由内核(多线程内核)实现线程切换,程序中一般使用轻量级线程(由内核线程支持),缺点是用户态和内核态之间切换不易,消耗内核资源 
+   
+    **用户线程**: 完全建立在用户空间的线程库,系统内核无法感知,缺点是线程操作自行处理,难以解决阻塞等问题                                                                                            
    
    **用户线程和轻量级线程(LWP)混合使用**:LWP作为用户线程和KLT的桥梁,可使用Kernel中的线程调度...,保留了建立在用户空间的用户线程,支持大规模的线程并发
 
@@ -404,7 +519,7 @@ public class DpTest {
 
             3.create pThread(linux) || create ~~windows Thread ~~~           
 
-        jdk21之后,出现虚拟线程,类协程,类似于用户线程,上下文切换JVM自行处理,JVM内部管理和调度,多个虚拟线程可以在同一个 OS 线程上运行其 Java 代码，可以有效地共享该线程。
+        jdk21之后,出现虚拟线程,类协程,类似于用户线程,上下文切换JVM自行处理,JVM内部管理和调度,多个虚拟线程可以在同一个 OS 线程上运行其 Java 代码，可以共享该线程
 
     5.`synchronized` 作用于主要用于线程同步
 
@@ -450,7 +565,7 @@ class Test{
 
     实现原理: 
 
-        代码块加锁是在字节码加指令`monitorenter monitorexit` ,线程同步方法加锁,会在class文件方法 Access Falgs 打标记 `ACC_SYNCHRONIZED`
+        代码块加锁是在字节码加指令`monitorenter monitorexit` ,线程同步方法加锁,会在class文件方法  flags 打标记 `ACC_SYNCHRONIZED`
 
     
 
@@ -458,10 +573,10 @@ class Test{
 
 1. debug时找错误;自定义异常处理,防止程序中断(ex:sql错误,文件错误...);使业务更加完整
 
-2. 主要使用`throw` 来手动抛出异常,实际开发可以创建`exception` 包,然后创建`BaseException` 用于继承,创建`GlobalExceptionhandler` 用于处理(方法重载)异常; 对于捕获异常,可以向上抛,也可以`try catch`
+2. 主要使用`throw` 来手动抛出异常,实际开发可能会创建`exception` 包,然后创建`BaseException` 用于继承,创建`GlobalExceptionhandler` 用于处理(方法重载)异常; 对于捕获异常,可以向上抛,也可以`try catch`
 
 3. ```java
-   //牛客上刚好做过一道题
+   //牛客上刚好做过一道题,刚好符合此题目要求
    //下面程序的输出是?
    public class TestDemo{
     public static String output = "";
@@ -493,7 +608,7 @@ class Test{
 
 1. 设计模式是前辈们总结理解后解决特定问题的一系列处理流程和解决思想,用于提升代码的复用性,可维护性.etc.主要分为3类: **创建者模式** 对类的实例化过程进行抽象(单例,工厂,建造者.etc)**结构型模式** 关注对象的组成以及对象之间的依赖关系(代理,装饰者,适配器.etc) **行为型模式** 关注对象的行为问题,对不同的对象划分责任和算法的抽象(迭代器,策略,模板方法.etc)
 
-2. 单例模式，向外提供唯一可被访问的实例化的对象，无此对象时，使用类创建一个。多线程并发访问时，加上Synchronized上锁,让没有持有该对象的类处于等待状态。
+2. 单例模式，向外提供唯一可被访问的实例化的对象，无此对象时，使用类创建一个。多线程并发访问时，加上`Synchronized`上锁,让没有持有该对象的类处于等待状态。
    
    实现:
    
@@ -661,13 +776,15 @@ public class DemoController {
 
 4. http Request 中主要有:请求行(method,uri),请求头(method,cookie.检验的token,etc),请求体(json形式的`DTO,VO`)
 
-5. 全双工通信在建立连接和断开连接时要通知双方,断开连接时由于数据传输可能正在进行,所以需要双方均收到应答,C端,S端均请求一次,回答一次,就形成了四次挥手;三次握手中,C端发起连接请求,所以S端不用向C端发请求
+5. 全双工通信在建立连接和断开连接时要通知双方,断开连接时由于数据传输可能正在进行,所以需要双方均收到应答,C端,S端均请求一次,回答一次,就形成了四次挥手;三次握手中,由于是建立连接,信道上无数据,C端发起连接请求,所以S端不用向C端发请求确定
 
 6. WebSocket 协议是单个 TCP 连接上进行全双工通信的协议,主要解决双向通信机制.
    
    WebSocket API 中，C端和S端只需完成一次握手，两者创建持久性的连接，并进行双向数据传输,允许S端主动向C端推送数据,使用 TCP 作为传输层协议，支持在 TCP 上层引入 TLS 层，进行数据加密.
 
 #### 3.5
+
+构建常量类便于上云或者本地转存时的文件名生成,接受到文件后获取后缀,拼接生成的文件前缀,防止覆盖,对文件大小/类型限制可以从接受到的对象属性比较判断
 
 ```java
 //1.ossUtil
@@ -703,6 +820,7 @@ public class Oss {
         if(FileType.IMG != ext){
             return Result.error("file type not satisfied");
         }
+        
         String objectName = new StringBuilder()
                 .append(FilePath.PATH1)
                 .append(UUID.randomUUID())
@@ -1019,4 +1137,4 @@ public class BaseContext {
 
 #### 5.4
 
-想法是:存前500条数据在`redis` 中,`controller`计数,(计数代码加锁)到达500时,发送请求后直接跳转的一个静态页面,显示活动已结束,提供一个返回`redis`数据的`controller`接口,每次请求返回一次全部数据,`service`生成准备`k,v`存在`redis`中,当`controller`传下来的`index>100`时,改变`k`的结构,之后查询成功抢楼的数据时,便于查找
+想法是:存前500条数据在`redis` 中,`controller`计数,(计数代码块加锁)到达500时,发送请求后直接跳转到一个静态页面,显示活动已结束;提供一个返回`redis`数据的`controller`接口,每次请求返回一次全部数据,做页面刷新,`service`生成准备`k,v`存在`redis`中,当`controller`传下来的`index>100`时,改变`k`的结构,之后查询成功抢楼的数据时,便于查找,对于一个id的重复申请,可以在第一次请求前,生成一个关联主键`id`的`token`,放行,之后的请求先查缓存的`token`,如果存在直接拦截

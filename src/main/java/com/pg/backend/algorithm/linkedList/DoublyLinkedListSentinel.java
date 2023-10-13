@@ -2,6 +2,7 @@ package com.pg.backend.algorithm.linkedList;
 
 import java.lang.reflect.Method;
 import java.util.Iterator;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class DoublyLinkedListSentinel<T> implements Iterable<T> {
@@ -9,6 +10,7 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T> {
     private final static String addMethodName = "add";
     private final static String removeMethodName = "remove";
 
+    private static ReentrantLock lock = new ReentrantLock();
     static class Node<T>{
         Node prev;
         T data;
@@ -83,7 +85,7 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T> {
      * if u want to call this function,please check the index`s rationality by yourself
      * @param index
      */
-    public void remove(int index) throws NoSuchMethodException {
+    public synchronized void remove(int index) throws NoSuchMethodException {
 //        this way has pool efficiency
 //        Node<T> prefix = findNode(index - 1);
 //        Node<T> suffix = findNode(index + 1);
@@ -95,7 +97,31 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T> {
         cArgs[0] = int.class;
         maintain(prefix,suffix,this.getClass().getDeclaredMethod(removeMethodName,cArgs[0]));
     }
+    /**
+     * 显式锁
+     * @param index
+     * @param object
+     * @throws NoSuchMethodException
+     */
+//    public  void remove(int index) throws NoSuchMethodException {
+//        lock.lock();  // acquire the lock
+//        try {
+//            // existing code...
+//            Node<T> prefix = findNode(index - 1);
+//            Node<T> suffix = prefix.next.next;
+//            prefix.next = suffix;
+//            suffix.prev = prefix;
+//            Class[] cArgs = new Class[1];
+//            cArgs[0] = int.class;
+//            maintain(prefix,suffix,this.getClass().getDeclaredMethod(removeMethodName,cArgs[0]));
+//        } finally {
+//            lock.unlock();  // release the lock
+//        }
+//    }
 
+    /**
+     * 未优化的代码
+     */
 //    @Deprecated
 //    public void add(int index,Node<T> tem){
 //
@@ -113,7 +139,7 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T> {
      * @param index
      * @param object
      */
-    private void add(int index,T object) throws NoSuchMethodException {
+    private synchronized void add(int index,T object) throws NoSuchMethodException {
 
         Node<T> prefix = findNode(index - 1);
         Node<T> suffix = prefix.next;
@@ -127,6 +153,28 @@ public class DoublyLinkedListSentinel<T> implements Iterable<T> {
         maintain(prefix,suffix,this.getClass().getDeclaredMethod(addMethodName,cArgs));
 
     }
+    /**
+     * 显示锁
+     */
+//    private  void add(int index,T object) throws NoSuchMethodException {
+//            lock.lock();
+//        try {
+//            Node<T> prefix = findNode(index - 1);
+//            Node<T> suffix = prefix.next;
+//            Node<T> tem = new Node<>(prefix,object, suffix);
+//            prefix.next = tem;
+//            suffix.prev = tem;
+//
+//            Class[] cArgs = new Class[2];
+//            cArgs[0] = int.class;
+//            cArgs[1] = Object.class;
+//            maintain(prefix,suffix,this.getClass().getDeclaredMethod(addMethodName,cArgs));
+//        } finally {
+//            lock.unlock();
+//        }
+//    }
+
+
     public void addByIndex(int index,T object) throws NoSuchMethodException {
         isIndexIllegal(index);
         add(index,object);

@@ -46,7 +46,7 @@ public class Demo {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ClassNotFoundException {
         Scanner in = new Scanner(System.in);
         String[] s = in.nextLine().split(" ");
         System.out.println(s.length);
@@ -57,5 +57,4 @@ public class Demo {
         System.out.println(t2);
         System.out.println(t3);
     }
-
 }
