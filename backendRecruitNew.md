@@ -310,7 +310,7 @@ public class DpTest {
 
 3. `String` 类被`final`修饰,不可被继承,成员方法无法被重写,字符串不可变,多线程安全,同一个字符串可被多个线程共享,用`String` 作为参数保证安全;不可变字符串保证了`hashCode`唯一同时由此特性实现字符串常量池(创建字符时,若已经存在,直接引用)
 
-4. `Lambda`主要用于匿名内部类的简化书写(重写条件是:只含有一个抽象方法的接口),函数式编程注重解决事件的工具而非对象,所以忽略产生对象,注重行为执行,主要是使用`Lombok 的@Builder` `stream()` .etc 简洁的实现函数式编程   
+4. `Lambda`主要用于匿名内部类的简化书写(重写条件是:只含有一个抽象方法的接口),函数式编程注重解决事件的工具而非对象,所以忽略产生对象,注重行为执行,主要是使用`Lombok 的@Builder`和 `stream()` .etc 简洁的实现函数式编程   
 
 ```java
  @Test
@@ -356,23 +356,45 @@ public class DpTest {
     }
 ```
 
-    5.如果是由同一个classLoader加载的,相同;否则不同
+    5.如果是由同一个`classLoader`加载的,相同;否则不同
 
 #### 2.5.3
 
-1. ArrayList是基于动态数组,LinkedList是基于双向链表;(数据量较大时)元素访问上,AL优于LL;(数据量较大时)插入删除上,LL优于AL;LL比AL的数据节点更大
+1. `ArrayList`是基于动态数组,`LinkedList`是基于双向链表;(数据量较大时)元素访问上,AL优于LL;(数据量较大时)插入删除上,LL优于AL;LL比AL的数据节点更大
 
-2. todo
+2. **HashMap**在**Map.Entry**静态内部类实现中存储`k,v`
+   
+   `HashMap`,在`put() 和get()`调用`hashCode()和equals()` 
+   
+   **put()**
+   
+   通过传递`k,v`调用`put()`  ,`HashMap`使用`hashCode()` 和哈希算法找到存储`k,v`的索引 `Entry`存储在`LinkedList`中,如果存在`Entry`, 会使用`equals()` 检查传递的`key`是否存在.存在,覆盖`value` 反之,创建一个新的`Entry`并保存
+   
+   **get()**
+   
+   传递`key`调用`get()`,使用` hashCode()` 寻找`array`中的索引,`equals()`找出匹配的`Entry`并返回
+   
+   注意点:
+   
+   - **HashMap**中遍历的顺序是不确定的
+   - **HashMap**中最多只允许一条数据的键为**null,** 可以允许多条数据的值为**null**
+   - **HashMap**是线程不安全的,调用**correntHashMap**保证线程安全
 
 #### 2.5.4
 
 1.   **进程** 是操作系统分配资源的基本单位,启动进程需要向OS 请求资源,一个进程至少有一个主线程,用于执行代码:**线程** 是进程的一个执行单元,线程从属于进程,用于执行程序,CPU调度的基本单位;**协程** 主要用于用户态,完全由用户控制无内核切换开销,勇于提升程序并发性能
 
-2. 并发是指同一时间内,多任务同时执行,实际任意时刻,单任务执行;保证线程安全有**1.** 
+2. 并发是指同一时间内,多任务同时执行,实际任意时刻,单任务执行;保证线程安全的方法:
    
-   1. **内核线程(KLT)** :直接由OS kernel 支持的线程,由内核(多线程内核)实现线程切换,程序中一般使用轻量级线程(由内核线程支持),缺点是用户态和内核态之间切换不易,消耗内核资源                                                                                                                                      **用户线程**: 完全建立在用户空间的线程库,系统内核无法感知,缺点是线程操作自行处理,难以解决阻塞等问题,                                                                                                               **用户线程和轻量级线程(LWP)混合使用**:LWP作为用户线程和KLT的桥梁,可使用Kernel中的线程调度...,保留了建立在用户空间的用户线程,支持大规模的线程并发
+   `voliate` 关键字,防止指令优化让`new`到的`Object`未初始化就被其他线程调用
+   
+   `synchronized`或者接口`Lock`对方法或者代码块加锁
 
-3. jdk21之前,创建的线程对象称为platform thread(linux) ,pthread在底层OS thread 上运行java 代码,在代码运行时占据OS thread 
+3. **内核线程(KLT)** :直接由`OS kernel` 支持的线程,由内核(多线程内核)实现线程切换,程序中一般使用轻量级线程(由内核线程支持),缺点是用户态和内核态之间切换不易,消耗内核资源  **用户线程**: 完全建立在用户空间的线程库,系统内核无法感知,缺点是线程操作自行处理,难以解决阻塞等问题,                                                                                                   
+   
+   **用户线程和轻量级线程(LWP)混合使用**:LWP作为用户线程和KLT的桥梁,可使用Kernel中的线程调度...,保留了建立在用户空间的用户线程,支持大规模的线程并发
+
+4. jdk21之前,创建的线程对象称为`platform thread`(linux) ,pthread在底层OS thread 上运行java 代码,在代码运行时占据OS thread
 
         创建流程:
 
@@ -384,11 +406,11 @@ public class DpTest {
 
         jdk21之后,出现虚拟线程,类协程,类似于用户线程,上下文切换JVM自行处理,JVM内部管理和调度,多个虚拟线程可以在同一个 OS 线程上运行其 Java 代码，可以有效地共享该线程。
 
-    4.synchronized 作用于主要用于线程同步
+    5.`synchronized` 作用于主要用于线程同步
 
     使用方法:
 
-        1.非static 方法
+        1.非`static` 方法
 
 ```java
  class Test{
@@ -406,7 +428,7 @@ class Test{
 }
 ```
 
-        2.static 方法
+        2.`static` 方法
 
 ```java
  class Test{
@@ -428,13 +450,11 @@ class Test{
 
     实现原理: 
 
-        代码块加锁是在字节码加指令monitorenter monitorexit ,线程同步方法加锁,会在class文件方法 Access Falgs 打标记 ACC_SYNCHRONIZED
+        代码块加锁是在字节码加指令`monitorenter monitorexit` ,线程同步方法加锁,会在class文件方法 Access Falgs 打标记 `ACC_SYNCHRONIZED`
 
     
 
 #### 2.5.5
-
-
 
 1. debug时找错误;自定义异常处理,防止程序中断(ex:sql错误,文件错误...);使业务更加完整
 
@@ -465,7 +485,7 @@ class Test{
     }
    ```
    
-   执行foo(0)时,不满足try语句if语句,不会抛出异常,执行finally语句;执行foo(1),满足try语句if语句,抛出异常,但是catch语句内有return 但是finally 语句内必须执行,所以finally语句执行后return
+   执行foo(0)时,不满足`try`和`if`语句,不会抛出异常,执行`finally`语句;执行foo(1),满足`try`语句`if`语句,抛出异常,但是`catch`语句内有`return` 但是`finally` 语句内必须执行,所以`finally`语句执行后`return`
    
    如果`finally`语句中也有`exception `,或者线程挂了,后面代码也不会执行
 
@@ -478,24 +498,23 @@ class Test{
    实现:
    
    ```java
-   
    //类加载时实例化
    public class St {
-       
+   
        private static St te = new St();
-       
+   
        private St() {
        }
-       
+   
        public static St getTe() {
            return te;
        }
-       
+   
    }
    //加单锁
    public class St1 {
        private static St1 te;
-       
+   
        private static St1() {
        }
       //每次需要获取锁
@@ -509,10 +528,10 @@ class Test{
    //进锁前检查
    public class St2 {
        private  static St2 te;
-       
+   
        private St2() {
        }
-       
+   
        public static St2 getTe() {    
            //先查后锁
            if (te == null) {
@@ -527,22 +546,22 @@ class Test{
    }
    //静态内部类
    public class St3 {
-       
+   
        private St3() {
        }
-       
+   
        private static class Sti {
            private static final St3 te = new St3();
        }
-       
+   
        public static St3 getTe() {
            return Sti.te;
        }
-        
+   
    }
    ```
 
-3. 生产者消费者用于并发设计,处理生产者和消费者之间的协作问题,对数据传输解耦,producer && consumer 只关注自身数据,不需注意数据发送接受,对于中间过程由类似的中间件rabbitMQ自行维护, spring AMQP 可以简化开发
+3. 生产者消费者用于并发设计,处理生产者和消费者之间的协作问题,对数据传输解耦,`producer && consumer `只关注自身数据,不需注意数据发送接受,对于中间过程由类似的中间件`rabbitMQ,rocketMQ`自行维护, `spring AMQP` 可以简化开发,使用的时候主要关注请求的模型,bindkey,消息体
 
 #### 3.2
 
@@ -578,11 +597,11 @@ public class HttpRequest {
 
 ###### ext
 
-1,2,3均已实现
+1,2,3均已在代码中实现
 
 #### 3.3
 
-crud时的公共数据,实现`aspect`切面类,填充`updateTime,createUser`.etc字段
+对于crud时的公共数据,实现`aspect`切面类,自动填充`updateTime,createUser`.etc字段
 
 ```java
 //controller 
@@ -798,7 +817,7 @@ select (select name from tb_teacher where id = t.id_teacher) 'name',(select coun
 
 #### 4.5
 
-todo
+创建`user`实体表储存人员信息,`role`表储存角色信息,`premission`表存储 权限信息,中间表创建`userRole`,`rolePremission`表,然后进行多表联查
 
 - PBAC0定义支持PBAC概念的系统最低要求,适用于需要基本角色访问控制的场景
 
@@ -988,8 +1007,16 @@ public class BaseContext {
 
 #### 5.3
 
-todo
+##### 分布式锁
+
+使用如`redis`的分布式锁,保证只有一次请求的全部流程处理完,才处理下一次请求 
+
+##### token
+
+对于一个请求,先申请一个 `token`,存在`redis`中,S端返回后,将此`token`绑定在请求头上,去`redis`中查询此`token`,查到表示第一次请求,放行处理后续逻辑并删除对应的`token ` ,如果发出多次相同请求,之后请求查不到`token`或者未携带`token`,进行拦截
+
+`ex`:强制新用户发帖验证邮箱,实名认证.etc,防止大量产生机器人;对于老用户,设置每日最大发帖数目,限制发帖之间的最小间隔 .etc
 
 #### 5.4
 
-todo
+想法是:存前500条数据在`redis` 中,`controller`计数,(计数代码加锁)到达500时,发送请求后直接跳转的一个静态页面,显示活动已结束,提供一个返回`redis`数据的`controller`接口,每次请求返回一次全部数据,`service`生成准备`k,v`存在`redis`中,当`controller`传下来的`index>100`时,改变`k`的结构,之后查询成功抢楼的数据时,便于查找
