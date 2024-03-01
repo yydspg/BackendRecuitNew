@@ -1,2 +1,29 @@
 server:
-  port: 9000
+  port: 9001
+spring:
+  datasource:
+    username: paul
+    password: 1234
+    url: 47.108.94.153
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: 192.168.152.139
+      port: 6379
+      database: 0
+      password: 1234
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    #operations-sorter: order
+    enabled: true
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  group-configs:
+    - group: 'com.pg'
+      paths-to-match: '/**'
+  default-flat-param-object: true
+  packages-to-scan: com.pg.backend

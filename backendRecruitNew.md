@@ -794,7 +794,6 @@ import com.pg.backend.common.Result;
 import com.pg.backend.constant.FilePath;
 import com.pg.backend.constant.FileSize;
 import com.pg.backend.constant.FileType;
-import com.pg.backend.utils.AliOssUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -812,15 +811,15 @@ public class Oss {
 
     @PostMapping("/upload")
     public Result upload(MultipartFile multipartFile) throws IOException {
-        if(FileSize.LV1 <multipartFile.getSize()){
+        if (FileSize.LV1 < multipartFile.getSize()) {
             return Result.error("file is too lage");
         }
         String originalFilename = multipartFile.getOriginalFilename();
         String ext = originalFilename.substring(originalFilename.lastIndexOf("."));
-        if(FileType.IMG != ext){
+        if (FileType.IMG != ext) {
             return Result.error("file type not satisfied");
         }
-        
+
         String objectName = new StringBuilder()
                 .append(FilePath.PATH1)
                 .append(UUID.randomUUID())
@@ -835,7 +834,7 @@ public class Oss {
 package com.pg.backend.constant;
 
 public class FileSize {
-    public static final Integer LV1 = 1024*1024
+    public static final Integer LV1 = 1024 * 1024
 }
 
 //fileTypeConstant
