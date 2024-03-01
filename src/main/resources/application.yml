@@ -2,13 +2,13 @@ server:
   port: 9001
 spring:
   datasource:
-    username: paul
-    password: 1234
-    url: 47.108.94.153
+    username:
+    password:
+    url:
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
-      host: 192.168.152.139
+      host:
       port: 6379
       database: 0
       password: 1234
