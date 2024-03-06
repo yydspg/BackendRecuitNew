@@ -5,7 +5,8 @@ package com.pg.backend.redisDistributedLock.service;
  */
 
 public enum Constant {
-    TE("order100");
+    TE("order100"),
+    LOCK("redisCommonLock");
     private String des;
     private Constant(String des) {
         this.des = des;

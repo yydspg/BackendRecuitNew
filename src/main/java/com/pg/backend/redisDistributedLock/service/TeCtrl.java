@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/te")
 public class TeCtrl {
     @Autowired QueryService queryService;
+
+    /* 模拟集群并发问题 */
     @GetMapping("/query")
     public String queryTe() {
         queryService.queryTe();
