@@ -19,4 +19,9 @@ public interface MyMap<K,V> {
     V put(K key,V value);
 
     V remove(Object key);
+
+
+    interface MyEntry<K,V> {
+
+    }
 }

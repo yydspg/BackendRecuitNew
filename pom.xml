@@ -52,6 +52,11 @@
             <artifactId>hutool-all</artifactId>
             <version>5.8.18</version>
         </dependency>
+        <dependency>
+            <groupId>com.aliyun.oss</groupId>
+            <artifactId>aliyun-sdk-oss</artifactId>
+            <version>3.16.1</version>
+        </dependency>
     </dependencies>
 
     <build>
