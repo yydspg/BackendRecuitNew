@@ -12,15 +12,12 @@ public interface MyMap<K,V> {
 
     boolean isEmpty();
 
-    boolean containsKey();
 
-    boolean containsValue();
-
-    V get(Object key);
+    V get(K key);
 
     V put(K key,V value);
 
-    V remove(Object key);
+    V remove(K key);
 
 
     interface myEntry<K, V>  {
