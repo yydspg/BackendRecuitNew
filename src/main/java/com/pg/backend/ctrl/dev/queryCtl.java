@@ -1,6 +1,7 @@
 package com.pg.backend.ctrl.dev;
 
 import com.alibaba.fastjson2.JSON;
+import com.pg.backend.common.web.ApiRes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,5 +23,9 @@ public class queryCtl {
         Object json = JSON.toJSON(stringStringHashMap);
         log.info("ok");
         return json;
+    }
+    @GetMapping("/test2")
+    public ApiRes test2() {
+        return  ApiRes.ok();
     }
 }
