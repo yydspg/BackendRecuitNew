@@ -1,25 +1,28 @@
-package com.pg.backend;
+package com.pg.provider;
+
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
+import org.springframework.web.client.RestTemplate;
 
 import java.net.InetAddress;
-
+import java.net.UnknownHostException;
 @Slf4j
-@SpringBootApplication
 @Configuration
-public class BackendApplication {
-
+@SpringBootApplication
+@EnableDiscoveryClient
+public class ProviderApplication {
     public static ConfigurableApplicationContext applicationContext;
-    public static void main(String[] args) throws Exception{
-        SpringApplication app=new SpringApplication(BackendApplication.class);
+    public static void main(String[] args) throws UnknownHostException {
+        SpringApplication app=new SpringApplication(ProviderApplication.class);
         applicationContext=app.run(args);
         Environment env = applicationContext.getEnvironment();
         log.info("\n----------------------------------------------------------\n\t" +
@@ -35,10 +38,15 @@ public class BackendApplication {
                 InetAddress.getLocalHost().getHostAddress(),
                 env.getProperty("server.port"));
     }
+
+    @Bean
+    @LoadBalanced
+    public RestTemplate restTemplate(){
+        return new RestTemplate();
+    }
     @Bean
     @Lazy
     public Environment getEnv() {
         return applicationContext.getEnvironment();
     }
 }
-
