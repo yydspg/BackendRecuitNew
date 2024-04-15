@@ -21,5 +21,5 @@ package com.pg.backend.designPattern.creatorPattern.factoryPattern.abstractFacto
 抽象工厂模式强调的是创建一系列相关或互相依赖对象的能力，而不需要客户端知道具体的产品类。通过使用抽象工厂，客户端代码只需与抽象工厂和抽象产品打交道，这样就能方便地更换产品族的具体实现，也就是实现了抽象工厂模式的核心价值——**分离接口和实现**，同时支持多个产品族的创建过程切换。
  */
 public class MyAbstractFactory {
-
+    
 }

@@ -1,4 +1,4 @@
-package com.pg.backend.common.web;
+package com.pg.backend.common.model;
 
 /**
  * @author paul 2024/3/24
